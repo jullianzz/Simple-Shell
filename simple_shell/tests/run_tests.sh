@@ -1,7 +1,8 @@
 #!/bin/sh
 TIMEOUT_SECONDS=5
 
-all_tests=$@
+#all_tests=$@
+all_tests="./tests/test_simple_input.c"
 test_count=$#
 fail_count=0
 
