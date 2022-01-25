@@ -7,8 +7,6 @@
 
 void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 
-	// printf("Beginning is %s\n", beg);
-
 	if (beg == end) {	// beg == end if they both point to a &, |, <, or > symbol
 		char *hptr = (char *) malloc(sizeof(char) * 2);  	// hptr stands for heap pointer
 		char symbol[2];
@@ -16,9 +14,6 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 		symbol[1] = '\0';
 		strcpy(hptr, symbol);
 		tokens_ds[*rtc] = hptr; 		// Add symbol to tokens_ds
-		// printf("LOC 1: heap pointer is %s\n", hptr);
-		// printf("rtc is %d\n", *rtc)/;
-		printf("LOC 1: Token added: %s\n", tokens_ds[*rtc]);
 		*rtc = *rtc + 1; 				// Increment rtc by 1
 	} 
 	
@@ -35,7 +30,7 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 		* into a char array called symbol
 		*/ 
 		char *hptr = (char *) malloc(sizeof(char)* 2);  	// hptr stands for heap pointer
-		hptr = NULL;
+		*hptr = '\0';
 
 		if (*end != '\0') {
 			char symbol[2];
@@ -47,18 +42,12 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 		* Add word and symbol to tokens_ds
 		*/
 		*end = '\0'; 					// Make end NUL to give the word a NUL terminator
-		char *hptr_beg = (char *) malloc(sizeof(char) * (strlen(beg) + 1));  	// hptr stands for heap pointer. NOTE: length = 1 here, this could cause problems
+		char *hptr_beg = (char *) malloc(sizeof(char) * (strlen(beg) + 1));  	// hptr stands for heap pointer
 		strcpy(hptr_beg, beg); 
 		tokens_ds[*rtc] = hptr_beg; 			// Add beg to tokens_ds
-		// printf("LOC 2: heap pointer is %s\n", hptr_beg);
-		// printf("rtc is %d\n", *rtc);
-		printf("LOC 2: Token added: %s\n", tokens_ds[*rtc]);
 		*rtc = *rtc + 1; 				// Increment rtc by 1
-		if (hptr != NULL) {
+		if (*hptr != '\0') {
 			tokens_ds[*rtc] = hptr; 		// Add symbol to tokens_ds
-			// printf("LOC 3: heap pointer is %s\n", hptr);
-			// printf("rtc is %d\n", *rtc);
-			printf("LOC 3: Token added: %s\n", tokens_ds[*rtc]);
 			*rtc = *rtc + 1; 				// Increment rtc by 1
 		}
 	}
@@ -73,16 +62,11 @@ void tokenize(char ptr[], char *tokens_ds[], int *rtc)
 	* If they do, continue tokenizing.
 	*/ 
 
-	printf("\nTokenizing %s\n", ptr); 
-
 	if (strchr(ptr, '&') == NULL && strchr(ptr, '|') == NULL && strchr(ptr, '<') == NULL && strchr(ptr, '>') == NULL) {
 		// If none of the symbols exist, add ptr to tokens_ds and return
 		char *hptr = (char *) malloc(sizeof(char) * (strlen(ptr) + 1));
 		strcpy(hptr, ptr); 
 		tokens_ds[*rtc] = hptr; 
-		// printf("LOC 4: heap pointer is %s\n", hptr);
-		// printf("rtc is %d\n", *rtc);
-		printf("LOC 4: Token added: %s\n", tokens_ds[*rtc]);
 		*rtc = *rtc + 1; 		// Increment rtc by 1
 		return; 
 	} 
@@ -97,9 +81,7 @@ void tokenize(char ptr[], char *tokens_ds[], int *rtc)
 		end = ptr; 
 
 		while (*end != '\0') {
-			// printf("End is %s\n", end);
 			if (*end == '&' || *end == '|' || *end == '>' || *end == '<') {
-				// TODO: problem lies here. The program doesn't come here even though it should??
 				split_symbols(beg, end, tokens_ds, rtc); 
 				end = end + 1; 
 				beg = end; 
@@ -116,6 +98,7 @@ void tokenize(char ptr[], char *tokens_ds[], int *rtc)
 
 struct pipeline *pipeline_build(const char *command_line)
 {
+	printf("Command Line: \"%s\"\n", command_line);
 	const int cmdl_len = strlen(command_line) + 1; 	// Find size of command_line string
 	int rtc = 0; 	// rtc stands for running tokens count, it increments by 1 after a token pointer is added to tokens_ds
 
@@ -144,9 +127,6 @@ struct pipeline *pipeline_build(const char *command_line)
 		* in ptr, and if so add them to tokens_ds
 		*/
 		tokenize(ptr, tokens_ds, &rtc); 
-		// printf("tokens[0] = %s\n", tokens_ds[0]);
-		// printf("tokens[1] = %s\n", tokens_ds[1]);
-		// printf("tokens[2] = %s\n", tokens_ds[2]);
 		ptr = strtok(NULL, delim);
 	}
 
@@ -178,6 +158,9 @@ int main() {
 	pipeline_build("Julia |Zeng Chicken>"); // test case 1
 	// pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
 	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
+	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
+	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
+	// char *hptr = (char *) malloc(sizeof(char)* 2);  	// hptr stands for heap pointer
 
 }
 
