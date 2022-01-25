@@ -56,6 +56,7 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 
 void tokenize(char ptr[], char *tokens_ds[], int *rtc) 
 {
+
 	/*
 	* Check if any of &, |, <, or > symbols exist.
 	* If they don't just add ptr to tokens_ds.
@@ -99,6 +100,11 @@ void tokenize(char ptr[], char *tokens_ds[], int *rtc)
 struct pipeline *pipeline_build(const char *command_line)
 {
 	printf("Command Line: \"%s\"\n", command_line);
+
+	/*******************************************************************************************
+	********************************** Solve the Lexing Problem ********************************
+	********************************************************************************************/
+
 	const int cmdl_len = strlen(command_line) + 1; 	// Find size of command_line string
 	int rtc = 0; 	// rtc stands for running tokens count, it increments by 1 after a token pointer is added to tokens_ds
 
@@ -106,7 +112,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	* Initialize array of char pointers (tokens_ds) to point to tokens and
 	* allocate maximum possible memory needed
 	*/
-	char **tokens_ds = (char **) malloc(sizeof(char *) * cmdl_len);
+	char **tokens_ds = (char **) malloc(sizeof(char *) * (cmdl_len + 1));
 
 	/*
 	* Make non-const copy of command_line for the purpose of using with strtok which 
@@ -130,6 +136,10 @@ struct pipeline *pipeline_build(const char *command_line)
 		ptr = strtok(NULL, delim);
 	}
 
+	/* 
+	* After while loop finishes, the tokens_ds data stucture holds 
+	* pointers to each token in the command line
+	*/ 
 	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
 
 	for (int i = 0; i < rtc; i++) {
@@ -138,12 +148,48 @@ struct pipeline *pipeline_build(const char *command_line)
 	printf("\n");
 
 	/*
-	* Shrink size of tokens_ds
+	* Shrink size of tokens_ds. Note: Actually probably don't need to do this. 
 	*/ 
 
-	/*
-	* Solve the parsing problem
+	/*******************************************************************************************
+	******************************** Solve the parsing problem *********************************
+	*******************************************************************************************/
+
+	/* 
+	* Initialize the index into tokens_ds as 0
+	*/
+	int tokens_ds_idx = 0; 
+ 
+	/* 
+	* Create the first pipeline_command object and initialize a moving
+	* pipeline_command pointer (pc_ptr) and a pointer to the beginning 
+	* of the linked list of pipeline_commands (pcmd_list)
 	*/ 
+	pipeline_command first_pc; 
+	pipeline_command *pc_ptr = &first_pc; 
+	pipeline_command *pcmd_list = &first_pc;
+
+	/*
+	* Populate pipeline_commands linked list
+	*/ 	
+	while (*tokens_ds[tokens_ds_idx] != '\0') {
+		int cmd_args_idx = 0; 
+		while (*tokens_ds[tokens_ds_idx] != '|') { // error will happen here, what is NUL, not '|'
+			pc_ptr->command_args[cmd_args_idx] = tokens_ds[tokens_ds_idx]; 
+			tokens_ds_idx++; 
+			cmd_args_idx++; 
+		}
+		cmd_args_idx++;
+		command_args[cmd_args_idx] = NULL;
+		if (tokens_ds_idx == rtc) {
+			break;
+		} else {
+			tokens_ds_idx++; // Need to increment to skip '|'
+			pc_ptr->next = (pipeline_command *) malloc(sizeof(pipeline_command) * 1); 
+		}
+	}
+
+
 	return NULL;
 }
 
@@ -159,7 +205,8 @@ int main() {
 	// pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
 	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
 	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
-	pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
+	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
+	pipeline_build("ls|wc -l >counts.txt"); // test case 6
 
 }
 
