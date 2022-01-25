@@ -155,12 +155,11 @@ void pipeline_free(struct pipeline *pipeline)
 
 int main() {
 	// code here to test pipeline_build
-	pipeline_build("Julia |Zeng Chicken>"); // test case 1
+	// pipeline_build("Julia |Zeng Chicken>"); // test case 1
 	// pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
 	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
 	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
-	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
-	// char *hptr = (char *) malloc(sizeof(char)* 2);  	// hptr stands for heap pointer
+	pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
 
 }
 
