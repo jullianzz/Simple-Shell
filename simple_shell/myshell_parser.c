@@ -120,7 +120,7 @@ struct pipeline *new_pipeline()
 
 struct pipeline *pipeline_build(const char *command_line)
 {
-	printf("Command Line: \"%s\"\n", command_line);
+	printf("Command Line: \"%s\"", command_line);
 
 	/*******************************************************************************************
 	********************************** Solve the Lexing Problem ********************************
@@ -141,6 +141,13 @@ struct pipeline *pipeline_build(const char *command_line)
 	*/
 	char cmdl_cpy[cmdl_len]; 			
 	strcpy(cmdl_cpy, command_line);
+
+	/*
+	* Remove the newline character
+	*/ 
+	if (char *newl_ptr = strchr(cmdl_cpy, '\n') != NULL) {
+		*newl_ptr = '\0';
+	}
 	
 	/* 
 	* Split cmdl_cpy by whitespace by calling strtok iteratively until the strtok's 
