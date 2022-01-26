@@ -159,36 +159,49 @@ struct pipeline *pipeline_build(const char *command_line)
 	* Initialize the index into tokens_ds as 0
 	*/
 	int tokens_ds_idx = 0; 
+
+	/*
+	* Initialize pipeline
+	*/ 
+	struct pipeline pipeline; 
  
 	/* 
 	* Create the first pipeline_command object and initialize a moving
 	* pipeline_command pointer (pc_ptr) and a pointer to the beginning 
 	* of the linked list of pipeline_commands (pcmd_list)
 	*/ 
-	pipeline_command first_pc; 
-	pipeline_command *pc_ptr = &first_pc; 
-	pipeline_command *pcmd_list = &first_pc;
+	struct pipeline_command first_pc; 
+	struct pipeline_command *pc_ptr = &first_pc; 
+	// struct pipeline_command *pcmd_list = &first_pc;
 
 	/*
 	* Populate pipeline_commands linked list
 	*/ 	
-	while (*tokens_ds[tokens_ds_idx] != '\0') {
-		int cmd_args_idx = 0; 
-		while (*tokens_ds[tokens_ds_idx] != '|') { // error will happen here, what is NUL, not '|'
-			pc_ptr->command_args[cmd_args_idx] = tokens_ds[tokens_ds_idx]; 
-			tokens_ds_idx++; 
-			cmd_args_idx++; 
-		}
-		cmd_args_idx++;
-		command_args[cmd_args_idx] = NULL;
-		if (tokens_ds_idx == rtc) {
-			break;
-		} else {
-			tokens_ds_idx++; // Need to increment to skip '|'
-			pc_ptr->next = (pipeline_command *) malloc(sizeof(pipeline_command) * 1); 
-		}
-	}
+	int cmd_args_idx = 0; 
+	while (tokens_ds_idx != rtc) {
+		switch (*tokens_ds[tokens_ds_idx]) {
+			case '|': 	/* Token '|' indicates the end of a command */ 
+				pc_ptr->command_args[cmd_args_idx] = NULL;
+				/* Create new pipeline_command and assign current pipeline_command next to new pipeline_command */
+				pc_ptr->next = (pipeline_command *) malloc(sizeof(pipeline_command) * 1);
+				pc_ptr = pc_ptr->next; 		// Point pc_ptr to new pipeline_command
+				cmd_args_idx = 0; 			// Reset command args index to 0
+				break;
+			case '&': 	/* Token '&' indicates the pipeline runs in the background */ 
+				pipeline.is_background = true; 
+				break; 
+			case '<':	/* Token '<' indicates a redirect in path */
+			case '>':	/* Token '>' indicates a redirect out path */
+				cmd_args_idx++; 			// Increment cmmd_args_idx to get the next word token
+				pc_ptr->redirect_in_path = tokens_ds[tokens_ds_idx]; 
+				break; 
+			default: 	/* Default indicates the token is a non-symbol word */
+				pc_ptr->command_args[cmd_args_idx] = tokens_ds[tokens_ds_idx]; 
+				cmd_args_idx++; 			// Increment cmmd_args_idx
 
+		}
+		tokens_ds_idx++; 	// Incremement the tokens_ds index
+	}
 
 	return NULL;
 }
@@ -208,6 +221,9 @@ int main() {
 	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
 	pipeline_build("ls|wc -l >counts.txt"); // test case 6
 
+	// struct pipeline_command *pc1 = (struct pipeline_command *) malloc(sizeof(struct pipeline_command) * 1); 
+	// struct pipeline_command *pc2 = (struct pipeline_command *) malloc(sizeof(struct pipeline_command) * 1); 
+	// pc1->next = pc2;
 }
 
 
