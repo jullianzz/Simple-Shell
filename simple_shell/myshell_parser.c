@@ -146,7 +146,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	* Remove the newline character
 	*/ 
 	char *newl_ptr; 
-	if (newl_ptr = strchr(cmdl_cpy, '\n') != NULL) {
+	if ((newl_ptr = strchr(cmdl_cpy, '\n')) != NULL) {
 		*newl_ptr = '\0';
 	}
 	
