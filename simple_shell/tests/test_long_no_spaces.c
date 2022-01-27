@@ -17,7 +17,7 @@
 int
 main(void) 
 {
-	struct pipeline * my_pipeline = pipeline_build("ls|mkdir<\tpickle|donut holes>elon_gated_musk_rat.pdf|yumyum&\n");
+	struct pipeline * my_pipeline = pipeline_build("ls|mkdir<pickle|donut holes>elon_gated_musk_rat.pdf|yumyum&\n");
     struct pipeline_command * curr_ptr = my_pipeline -> commands;
     
 	// Test that a pipeline was returned
