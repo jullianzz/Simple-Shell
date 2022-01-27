@@ -3,6 +3,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <assert.h>
 
 
 void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
@@ -44,8 +45,8 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 		*end = '\0'; 					// Make end NUL to give the word a NUL terminator
 		char *hptr_beg = (char *) malloc(sizeof(char) * (strlen(beg) + 1));  	// hptr stands for heap pointer
 		strcpy(hptr_beg, beg); 
-		tokens_ds[*rtc] = hptr_beg; 			// Add beg to tokens_ds
-		*rtc = *rtc + 1; 				// Increment rtc by 1
+		tokens_ds[*rtc] = hptr_beg; 		// Add beg to tokens_ds
+		*rtc = *rtc + 1; 					// Increment rtc by 1
 		if (*hptr != '\0') {
 			tokens_ds[*rtc] = hptr; 		// Add symbol to tokens_ds
 			*rtc = *rtc + 1; 				// Increment rtc by 1
@@ -56,6 +57,7 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 
 void tokenize(char ptr[], char *tokens_ds[], int *rtc) 
 {
+
 	/*
 	* Check if any of &, |, <, or > symbols exist.
 	* If they don't just add ptr to tokens_ds.
@@ -96,9 +98,34 @@ void tokenize(char ptr[], char *tokens_ds[], int *rtc)
 	}
 }
 
+struct pipeline_command *new_pipeline_cmd() 
+{
+	struct pipeline_command *cmd_ptr = (struct pipeline_command *) malloc(sizeof(struct pipeline_command) * 1);
+	cmd_ptr->command_args[0] = NULL; 
+	cmd_ptr->redirect_in_path = NULL;
+	cmd_ptr->redirect_out_path = NULL;
+	cmd_ptr->next = NULL;
+
+	return cmd_ptr;
+}
+
+struct pipeline *new_pipeline() 
+{
+	struct pipeline *pipeline = (struct pipeline *) malloc(sizeof(struct pipeline) * 1);
+	pipeline->commands = NULL;
+	pipeline->is_background = false; 
+
+	return pipeline; 
+}
+
 struct pipeline *pipeline_build(const char *command_line)
 {
-	printf("Command Line: \"%s\"\n", command_line);
+	printf("Command Line: \"%s\"", command_line);
+
+	/*******************************************************************************************
+	********************************** Solve the Lexing Problem ********************************
+	********************************************************************************************/
+
 	const int cmdl_len = strlen(command_line) + 1; 	// Find size of command_line string
 	int rtc = 0; 	// rtc stands for running tokens count, it increments by 1 after a token pointer is added to tokens_ds
 
@@ -106,7 +133,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	* Initialize array of char pointers (tokens_ds) to point to tokens and
 	* allocate maximum possible memory needed
 	*/
-	char **tokens_ds = (char **) malloc(sizeof(char *) * cmdl_len);
+	char **tokens_ds = (char **) malloc(sizeof(char *) * (cmdl_len + 1));
 
 	/*
 	* Make non-const copy of command_line for the purpose of using with strtok which 
@@ -114,6 +141,17 @@ struct pipeline *pipeline_build(const char *command_line)
 	*/
 	char cmdl_cpy[cmdl_len]; 			
 	strcpy(cmdl_cpy, command_line);
+
+	/*
+	* Remove the newline character
+	*/ 
+	char *newl_ptr; 
+	if ((newl_ptr = strchr(cmdl_cpy, '\n')) != NULL) {
+		// printf("THERE'S A NEW LINE");
+		// printf("Before: %sBLAH", cmdl_cpy); 
+		*newl_ptr = '\0';
+		// printf("After: %sBLAH", cmdl_cpy); 
+	}
 	
 	/* 
 	* Split cmdl_cpy by whitespace by calling strtok iteratively until the strtok's 
@@ -130,6 +168,10 @@ struct pipeline *pipeline_build(const char *command_line)
 		ptr = strtok(NULL, delim);
 	}
 
+	/* 
+	* After while loop finishes, the tokens_ds data stucture holds 
+	* pointers to each token in the command line
+	*/ 
 	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
 
 	for (int i = 0; i < rtc; i++) {
@@ -137,14 +179,67 @@ struct pipeline *pipeline_build(const char *command_line)
 	}
 	printf("\n");
 
-	/*
-	* Shrink size of tokens_ds
-	*/ 
+
+	/*******************************************************************************************
+	******************************** Solve the parsing problem *********************************
+	*******************************************************************************************/
 
 	/*
-	* Solve the parsing problem
+	* Initialize pipeline with NULL fields
 	*/ 
-	return NULL;
+	struct pipeline *pipeline = new_pipeline(); 
+ 
+	/* 
+	* Create the first pipeline_command object and initialize a
+	* pipeline_command iterator (pcmds_iterator) 
+	*/ 
+	pipeline->commands = new_pipeline_cmd();
+	struct pipeline_command *pcmds_iterator = pipeline->commands; 
+
+	/*
+	* Parse tokens_ds to build pipeline struct
+	*/ 	
+	int tokens_ds_idx = 0; 
+	int cmd_args_idx = 0; 
+	while (tokens_ds_idx != rtc) {
+		switch (*tokens_ds[tokens_ds_idx]) {
+
+			/* Token '|' indicates the end of a command */ 
+			case '|':
+				/* Create new pipeline_command and assign current pipeline_command next to new pipeline_command */
+				pcmds_iterator->next = new_pipeline_cmd(); 
+				pcmds_iterator = pcmds_iterator->next; 		// Point pcmds_iterator to new pipeline_command
+				cmd_args_idx = 0; 							// Reset command args index to 0
+				break;
+
+			/* Token '&' indicates the pipeline runs in the background */ 
+			case '&': 	
+				pipeline->is_background = true; 
+				break; 
+
+			/* Token '<' indicates a redirect in path */
+			case '<':
+				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
+				pcmds_iterator->redirect_in_path = tokens_ds[tokens_ds_idx]; 
+				break;
+
+			/* Token '>' indicates a redirect out path */
+			case '>':
+				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
+				pcmds_iterator->redirect_out_path = tokens_ds[tokens_ds_idx]; 
+				break; 
+
+			/* Default indicates the token is a non-symbol word */
+			default: 
+				pcmds_iterator->command_args[cmd_args_idx] = tokens_ds[tokens_ds_idx]; 	// Overwrite with NULL
+				cmd_args_idx++; 							// Increment cmmd_args_idx
+				pcmds_iterator->command_args[cmd_args_idx] = NULL; // Pre-write next one with NULL
+
+		}
+		tokens_ds_idx++; 	// Incremement the tokens_ds index
+	}
+
+	return pipeline;
 }
 
 void pipeline_free(struct pipeline *pipeline)
@@ -153,15 +248,52 @@ void pipeline_free(struct pipeline *pipeline)
 }
 
 
-int main() {
-	// code here to test pipeline_build
-	// pipeline_build("Julia |Zeng Chicken>"); // test case 1
-	// pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
-	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
-	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
-	pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
+// int main() {
+// 	// code here to test pipeline_build
+// 	// struct pipeline *pipeline = pipeline_build("Julia |Zeng Chicken>"); // test case 1
+// 	// struct pipeline *pipeline = pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
+// 	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
+// 	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
+// 	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
+// 	// struct pipeline *pipeline = pipeline_build("ls|wc -l >counts.txt&\n"); // test case 6
+// 	struct pipeline* pipeline = pipeline_build("       ls     fd\n");
 
-}
+
+// 	printf("\nPRINT PIPELINE DATA STRUCTURE:\n");
+// 	// printf("Is Background is: %d\n", pipeline->is_background);
+// 	printf("First word of first command is: %s\n", pipeline->commands->command_args[0]);
+// 	printf("Second word of first command is: %s\n", pipeline->commands->command_args[1]);
+// 	// printf("First word of second command is: %s\n", pipeline->commands->next->command_args[0]);
+// 	// printf("Second word of second command is: %s\n", pipeline->commands->next->command_args[1]);
+// 	// printf("Third word of second command is: %s\n", pipeline->commands->next->command_args[2]);
+// 	// printf("Fourth word of second command is: %s\n", pipeline->commands->next->command_args[3]);
+// 	// printf("Pipe out of second command is: %s\n", pipeline->commands->next->redirect_out_path);
+
+// 	assert(strcmp("ls", pipeline->commands->command_args[0]) == 0);
+// 	assert(pipeline->commands->command_args[1] == NULL);
+
+// 	// printf("The int value of first cmd is %d\n", *(pipeline->commands->command_args[0]));
+// 	// printf("The int value of ls is %d\n", "l");
+
+// 	if (strcmp("ls", pipeline->commands->command_args[0]) == 0) {
+// 		printf("Yassss\n");
+// 	} else 
+// 		printf("Nooooo\n");
+
+// 	if (pipeline->commands->command_args[1] == NULL) {
+// 		printf("Yassss null\n");
+// 	} else 
+// 		printf("Nooooo not null\n");
+
+
+// 	// char str[] = "ls"; 
+// 	// // iterate through ls and pipeline cmd to find difference
+// 	// for (int i = 0; i < 2; i++) {
+// 	// 	printf("Comparison: %d\n", strcmp(str[i], pipeline->commands->command_args[i])); 
+// 	// }
+// 	// printf("Comparison: %d\n", strcmp(str, pipeline->commands->command_args[0])); 
+
+// }
 
 
 
