@@ -14,7 +14,7 @@
 int
 main(void)
 {
-	struct pipeline* my_pipeline = pipeline_build("ls -a");
+	struct pipeline* my_pipeline = pipeline_build("ls\n");
 
 	// Test that a pipeline was returned
 	TEST_ASSERT(my_pipeline != NULL);

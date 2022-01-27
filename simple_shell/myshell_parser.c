@@ -256,7 +256,7 @@ void pipeline_free(struct pipeline *pipeline)
 // 	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
 // 	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
 // 	// struct pipeline *pipeline = pipeline_build("ls|wc -l >counts.txt&\n"); // test case 6
-// 	struct pipeline* pipeline = pipeline_build("ls\n");
+// 	struct pipeline* pipeline = pipeline_build("       ls     fd\n");
 
 
 // 	printf("\nPRINT PIPELINE DATA STRUCTURE:\n");
