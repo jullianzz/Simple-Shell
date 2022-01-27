@@ -120,7 +120,7 @@ struct pipeline *new_pipeline()
 
 struct pipeline *pipeline_build(const char *command_line)
 {
-	printf("Command Line: \"%s\"", command_line);
+	printf("Command Line: %s", command_line);
 
 	/*******************************************************************************************
 	********************************** Solve the Lexing Problem ********************************
