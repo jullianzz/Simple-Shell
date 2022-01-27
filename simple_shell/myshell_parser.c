@@ -248,54 +248,6 @@ void pipeline_free(struct pipeline *pipeline)
 }
 
 
-// int main() {
-// 	// code here to test pipeline_build
-// 	// struct pipeline *pipeline = pipeline_build("Julia |Zeng Chicken>"); // test case 1
-// 	// struct pipeline *pipeline = pipeline_build("Julia < Zeng < Chickens |yar");  // test case 2
-// 	// pipeline_build("Julia Zeng Chickens Yas"); // test case 3
-// 	// pipeline_build("Julia Zeng >Chickens |Yas"); // test case 4
-// 	// pipeline_build("Julia |Zeng Ch&icken>"); // test case 5
-// 	// struct pipeline *pipeline = pipeline_build("ls|wc -l >counts.txt&\n"); // test case 6
-// 	struct pipeline* pipeline = pipeline_build("       ls     fd\n");
-
-
-// 	printf("\nPRINT PIPELINE DATA STRUCTURE:\n");
-// 	// printf("Is Background is: %d\n", pipeline->is_background);
-// 	printf("First word of first command is: %s\n", pipeline->commands->command_args[0]);
-// 	printf("Second word of first command is: %s\n", pipeline->commands->command_args[1]);
-// 	// printf("First word of second command is: %s\n", pipeline->commands->next->command_args[0]);
-// 	// printf("Second word of second command is: %s\n", pipeline->commands->next->command_args[1]);
-// 	// printf("Third word of second command is: %s\n", pipeline->commands->next->command_args[2]);
-// 	// printf("Fourth word of second command is: %s\n", pipeline->commands->next->command_args[3]);
-// 	// printf("Pipe out of second command is: %s\n", pipeline->commands->next->redirect_out_path);
-
-// 	assert(strcmp("ls", pipeline->commands->command_args[0]) == 0);
-// 	assert(pipeline->commands->command_args[1] == NULL);
-
-// 	// printf("The int value of first cmd is %d\n", *(pipeline->commands->command_args[0]));
-// 	// printf("The int value of ls is %d\n", "l");
-
-// 	if (strcmp("ls", pipeline->commands->command_args[0]) == 0) {
-// 		printf("Yassss\n");
-// 	} else 
-// 		printf("Nooooo\n");
-
-// 	if (pipeline->commands->command_args[1] == NULL) {
-// 		printf("Yassss null\n");
-// 	} else 
-// 		printf("Nooooo not null\n");
-
-
-// 	// char str[] = "ls"; 
-// 	// // iterate through ls and pipeline cmd to find difference
-// 	// for (int i = 0; i < 2; i++) {
-// 	// 	printf("Comparison: %d\n", strcmp(str[i], pipeline->commands->command_args[i])); 
-// 	// }
-// 	// printf("Comparison: %d\n", strcmp(str, pipeline->commands->command_args[0])); 
-
-// }
-
-
 
 
 
