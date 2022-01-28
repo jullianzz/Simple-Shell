@@ -147,10 +147,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	*/ 
 	char *newl_ptr; 
 	if ((newl_ptr = strchr(cmdl_cpy, '\n')) != NULL) {
-		// printf("THERE'S A NEW LINE");
-		// printf("Before: %sBLAH", cmdl_cpy); 
 		*newl_ptr = '\0';
-		// printf("After: %sBLAH", cmdl_cpy); 
 	}
 	
 	/* 
