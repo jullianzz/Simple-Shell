@@ -235,7 +235,6 @@ struct pipeline *pipeline_build(const char *command_line)
 		}
 		tokens_ds_idx++; 	// Incremement the tokens_ds index
 	}
-
 	return pipeline;
 }
 
