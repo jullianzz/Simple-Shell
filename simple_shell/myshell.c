@@ -4,9 +4,26 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
+#include "fcntl.h"
+
+// Call execv with redirection
+void call_and_redirect(const struct pipeline_command *pcmd) {
+    /*
+    * Check if the pipeline_command contains a redirect out.
+    * If it does, open the file and use dup2() to direct stdout 
+    * of execv() to the file. 
+    */
+    int fd;
+    if (pcmd->redirect_out_path != NULL) {  // Need to open redirect out file for writing 
+        fd = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT); // Add O_CREAT flag if needed, need to check out specifications
+        dup2(fd, 1);
+    }
+    close(fd);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.
+    execv(pcmd->command_args[0], pcmd->command_args);
+}
+
 
 // Call execute_cmds after pipeline_build
-
 void execute_cmds(const struct pipeline *pipeline) 
 {
     // printf("yass");
@@ -21,7 +38,6 @@ void execute_cmds(const struct pipeline *pipeline)
         pid_t pid = fork(); 
         if (pid > 0) { /* Parent Process */ 
             // printf("PARENT process pid is %d \n", pid);
-            // waitpid(pid, &status, 0);   // Unsure what all these arguments do, but this waits for the child process
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
             // exit(status);   // I think this exits out of the parent process, unsure
@@ -34,13 +50,7 @@ void execute_cmds(const struct pipeline *pipeline)
             * is no need to concatenate command_args[0] with a directory string. 
             */  
             // printf("CHILD process pid is %d\n", pid);
-            if (strchr(pcmd->command_args[0], '/') != NULL) {
-                /* 
-                * Forward slash is present and path to binary is specified in command 
-                * input - do not need create path
-                */
-                execv(pcmd->command_args[0], pcmd->command_args);   // TODO: the argv used here might not include command_args[0] 
-            } else {
+            if (strchr(pcmd->command_args[0], '/') == NULL) {
                 /*
                 * Forward slash is not present and string manipulation on 
                 * command_args[0] is needed
@@ -51,8 +61,9 @@ void execute_cmds(const struct pipeline *pipeline)
                 strcat(hptr, pcmd->command_args[0]);
                 pcmd->command_args[0] = hptr; 
                 // printf("the new directory is %s\n", pcmd->command_args[0]);
-                execv(pcmd->command_args[0], pcmd->command_args);   // TODO: the argv used here might not include command_args[0] 
             }
+
+            call_and_redirect(pcmd); 
 
             exit(EXIT_SUCCESS); 
 
@@ -75,7 +86,8 @@ int main(int argc, char *argv[]) {
         // struct pipeline *pb = pipeline_build("/bin/ls\n"); 
         // struct pipeline *pb = pipeline_build("ls\n");
         // struct pipeline *pb = pipeline_build("ls > outfile.txt\n"); 
-        struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
+        // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
+        struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
         // printf("hereee***");
         execute_cmds(pb); 
         // printf("hereeeBLEEEEEP");
