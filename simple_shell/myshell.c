@@ -15,12 +15,12 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     * If it does, open the file and use dup2() to write the
     * file contents into stdin. Then execute execv(). 
     */
-//     int fd_in; 
-//     if (pcmd->redirect_in_path != NULL) {  // Need to open redirect in file for reading
-//         fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
-//         dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
-//     }
-//     close(fd_in);     
+    int fd_in; 
+    if (pcmd->redirect_in_path != NULL) {  // Need to open redirect in file for reading
+        fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
+        dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
+    }
+    close(fd_in);     
     
     /*
     * Check if the pipeline_command contains a redirect out.
@@ -29,7 +29,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     */
     int fd_out;
     if (pcmd->redirect_out_path != NULL) {  // Need to open redirect out file for writing 
-        fd_out = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT); // Add O_CREAT flag if needed, need to check out specifications
+        fd_out = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC); // Add O_CREAT flag if needed, need to check out specifications
         dup2(fd_out, 1);
     }
     close(fd_out);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.

@@ -169,12 +169,12 @@ struct pipeline *pipeline_build(const char *command_line)
 	* After while loop finishes, the tokens_ds data stucture holds 
 	* pointers to each token in the command line
 	*/ 
-	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
+// 	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
 
-	for (int i = 0; i < rtc; i++) {
-		printf("%s\n", tokens_ds[i]);
-	}
-	printf("\n");
+// 	for (int i = 0; i < rtc; i++) {
+// 		printf("%s\n", tokens_ds[i]);
+// 	}
+// 	printf("\n");
 
 
 	/*******************************************************************************************
