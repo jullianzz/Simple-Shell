@@ -7,8 +7,13 @@
 #include "fcntl.h"
 #include "sys/wait.h"
 
-// Point stdin and stdout to different files if input or output 
-// redirection paths is not null in pipeline_command
+/*
+* Point stdin and stdout to different files if input or output 
+* redirection paths is not null in pipeline_command
+* For valid pipelines (and this assignment assumes valid
+* pipeline inputs) only the  first and last pipeline 
+* commands can have input and output redirection, respectively. 
+*/ 
 void setup_redirection(const struct pipeline_command *pcmd) {
     /*
     * Check if the pipeline_command contains a redirect in.
@@ -36,9 +41,12 @@ void setup_redirection(const struct pipeline_command *pcmd) {
 }
 
 // Read from the pipe and write to the pipe
-void rdwr_pipe() {
+void setup_pipe(const struct pipeline_command *pcmd) {
+    // Check that BOTH redirect_out_path and redirect_in_path are NULL 
+    if ()
     /*
-    * Set up a new pipe for interprocess communication with the next command
+    * Set up a new pipe for interprocess communication with the next command.
+    * Initialize new pipe. Open pipe write FD for wri
     */
 }
 
@@ -84,6 +92,7 @@ void execute_cmds(const struct pipeline *pipeline)
             }
 
             setup_redirection(pcmd); 
+            setup_piping(pcmd); 
             execv(pcmd->command_args[0], pcmd->command_args);
 
             exit(EXIT_SUCCESS); 
