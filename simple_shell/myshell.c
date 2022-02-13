@@ -82,39 +82,33 @@ void execute_cmds(const struct pipeline *pipeline)
     // iterate through each pipeline_command in pipeline and execute each command using execve
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
+    bool path_specified = false; 
 
     while (pcmd != NULL) {
         pid_t pid = fork(); 
         if (pid > 0) { /* Parent Process */ 
-            // printf("PARENT process pid is %d \n", pid);
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
             // exit(status);   // I think this exits out of the parent process, unsure
          
         } else if (pid == 0) { /* Child Process */  
+            setup_redirection(pcmd); 
+//             setup_pipe(pcmd); 
+            
             /*
-            * String Processing Step to create execv path argument:
-            * Check if the string has a forward slash. If it does, it 
-            * indicates that the string contains directory information and there
-            * is no need to concatenate command_args[0] with a directory string. 
+            * Check if the first command args has a forward slash. If it does, it 
+            * indicates that the command arg contains directory information and 
+            * need to use execv. Else, use execvp to search PATH environment. 
             */  
-            // printf("CHILD process pid is %d\n", pid);
             if (strchr(pcmd->command_args[0], '/') == NULL) {
                 /*
-                * Forward slash is not present and string manipulation on 
-                * command_args[0] is needed
+                * Forward slash is not present in command_args[0] - use execvp
                 */
-                char directory[] = "/bin/";              // Initialize the directory string which is "/bin/" for now  
-                char *hptr = (char *) malloc(sizeof(char) * (strlen(pcmd->command_args[0]) + strlen(directory) + 1));   // +1 for nul
-                hptr = directory;
-                strcat(hptr, pcmd->command_args[0]);
-                pcmd->command_args[0] = hptr; 
-                // printf("the new directory is %s\n", pcmd->command_args[0]);
+                execvp(pcmd->command_args[0], pcmd->command_args);
+            } else {
+                // Foward slash is present - use execv 
+                execv(pcmd->command_args[0], pcmd->command_args);
             }
-
-            setup_redirection(pcmd); 
-            setup_pipe(pcmd); 
-            execv(pcmd->command_args[0], pcmd->command_args);
 
             exit(EXIT_SUCCESS); 
 
@@ -134,15 +128,15 @@ int main(int argc, char *argv[]) {
 		// instantiate myshell 
 		// myshell(1); 
         // printf("hereee___");
-        // struct pipeline *pb = pipeline_build("/bin/ls\n"); 
-        // struct pipeline *pb = pipeline_build("ls\n");
+        struct pipeline *pb = pipeline_build("/bin/ls\n"); 
+//         struct pipeline *pb = pipeline_build("ls\n");
         // struct pipeline *pb = pipeline_build("ls > outfile.txt\n"); 
         // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
 //         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
-        struct pipeline *pb = pipeline_build("ls -al | wc -l\n");
+//         struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
         // printf("hereee***");
         execute_cmds(pb); 
         // printf("hereeeBLEEEEEP");
