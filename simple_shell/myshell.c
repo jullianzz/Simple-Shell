@@ -6,6 +6,10 @@
 #include "unistd.h"
 #include "fcntl.h"
 #include "sys/wait.h"
+#include "stdbool.h"
+
+bool rd_from_pipe = false; // rd_from_pipe is true for all commands in the pipeline, except for the first
+int rd_pipefd; // File descriptor of pipe file to read from for input to current command 
 
 /*
 * Point stdin and stdout to different files if input or output 
@@ -43,11 +47,34 @@ void setup_redirection(const struct pipeline_command *pcmd) {
 // Read from the pipe and write to the pipe
 void setup_pipe(const struct pipeline_command *pcmd) {
     // Check that BOTH redirect_out_path and redirect_in_path are NULL 
-    if ()
+    if (pcmd->redirect_in_path == NULL || pcmd->redirect_out_path == NULL) {
+        /*
+        * If if-statement is entered, this indicates that pcmd is the first
+        * or last command in the pipeline, and piping is not needed. 
+        * (Actually not be true still need to WR for the first command
+        * and RD for the final command). 
+        * There could also be the case that 
+        */
+        return; 
+    }
+    
     /*
-    * Set up a new pipe for interprocess communication with the next command.
-    * Initialize new pipe. Open pipe write FD for wri
+    * If the control comes here, pcmd can be a first, middle, or final 
+    * command in the pipeline. Set up a new pipe for interprocess
+    * communication with the next command. Initialize
+    * new pipe. Open pipe write FD for wri
     */
+    // Check if the pcmd is either a middle or final command in the pipeline
+    if (rd_from_pipe) {
+        
+    } else {
+        rd_from_pipe = true; 
+    }
+    int pipefd[2]; 
+    pipe(pipefd); // pipefd[0] = RD, pipefd[1] = WR
+    close(pipefd[0]); // Close the pipe FD for RD mode because it is not needed, instead pass it to the next command
+    dup2(pipefd[1], 1); // Write the stdout of the command to the pipe file
+    
 }
 
 
