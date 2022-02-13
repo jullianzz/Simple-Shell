@@ -54,21 +54,21 @@ void setup_pipe(const struct pipeline_command *pcmd) {
     * If pcmd is the middle or last command in the pipeline, point stdin to 
     * rd_pipefd, and do the same steps as the first command in the pipeline. 
     */
-    // Check if the pcmd is either a middle or final command in the pipeline
-    if (rd_from_pipe) {
+
+    if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
         dup2(rd_pipefd, 0);  // Point stdin to pipe file
         close(rd_pipefd);    // Release old pipe RD FD
-        int pipefd[2]; 
-        pipe(pipefd); // pipefd[0] = RD, pipefd[1] = WR
-    //     close(pipefd[0]); // Close the pipe FD for RD mode because it is not needed, instead pass it to the next command
-        rd_pipefd = pipe[0];    // Set rd_pipefd to the new pipe RD FD
-        dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
-        close(pipefd[1]);       // Close the pipe WR FD because it is no longer needed
-    } else {
-        // Do not need to read from pipe for command input
+ 
+    } else {    /* pcmd is the first command in the pipeline */ 
         rd_from_pipe = true;   // Set rd_from_pipe to true to signal pipe read for next command
     }
-
+    
+    int pipefd[2]; 
+    pipe(pipefd); // Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
+    rd_pipefd = pipefd[0];    // Set rd_pipefd to the new pipe RD FD
+    dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
+    close(pipefd[1]);       // Close the pipe WR FD because it is no longer needed
+    
 }
 
 
@@ -113,7 +113,7 @@ void execute_cmds(const struct pipeline *pipeline)
             }
 
             setup_redirection(pcmd); 
-            setup_piping(pcmd); 
+            setup_pipe(pcmd); 
             execv(pcmd->command_args[0], pcmd->command_args);
 
             exit(EXIT_SUCCESS); 
@@ -140,8 +140,9 @@ int main(int argc, char *argv[]) {
         // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
-        struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
+//         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
 //         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
+        struct pipeline *pb = pipeline_build("ls -al | wc -l\n");
         // printf("hereee***");
         execute_cmds(pb); 
         // printf("hereeeBLEEEEEP");
