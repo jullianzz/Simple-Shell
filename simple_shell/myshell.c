@@ -7,6 +7,7 @@
 #include "fcntl.h"
 #include "sys/wait.h"
 #include "stdbool.h"
+#include "signal.h"
 
 bool rd_from_pipe;   // rd_from_pipe is true for all commands in the pipeline, except for the first
 int rd_pipefd;               // File descriptor of pipe file to read from for input to current command 
