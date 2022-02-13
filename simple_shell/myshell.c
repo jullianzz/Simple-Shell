@@ -44,37 +44,31 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     close(fd_out);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.
 }
 
-// Read from the pipe and write to the pipe
+// Set up a new pipe for interprocess communication with the next pipeline command. 
 void setup_pipe(const struct pipeline_command *pcmd) {
-    // Check that BOTH redirect_out_path and redirect_in_path are NULL 
-    if (pcmd->redirect_in_path == NULL || pcmd->redirect_out_path == NULL) {
-        /*
-        * If if-statement is entered, this indicates that pcmd is the first
-        * or last command in the pipeline, and piping is not needed. 
-        * (Actually not be true still need to WR for the first command
-        * and RD for the final command). 
-        * There could also be the case that 
-        */
-        return; 
-    }
-    
     /*
-    * If the control comes here, pcmd can be a first, middle, or final 
-    * command in the pipeline. Set up a new pipe for interprocess
-    * communication with the next command. Initialize
-    * new pipe. Open pipe write FD for wri
+    * Check if the pcmd is either a middle or final command in the pipeline. 
+    * If pcmd is the first command in the pipeline, create a new pipe file,
+    * point stdout to new pipe WR FD, set rd_pipefd to new pipe RD FD,
+    * and set rd_from_pipe to true. 
+    * If pcmd is the middle or last command in the pipeline, point stdin to 
+    * rd_pipefd, and do the same steps as the first command in the pipeline. 
     */
     // Check if the pcmd is either a middle or final command in the pipeline
     if (rd_from_pipe) {
-        
+        dup2(rd_pipefd, 0);  // Point stdin to pipe file
+        close(rd_pipefd);    // Release old pipe RD FD
+        int pipefd[2]; 
+        pipe(pipefd); // pipefd[0] = RD, pipefd[1] = WR
+    //     close(pipefd[0]); // Close the pipe FD for RD mode because it is not needed, instead pass it to the next command
+        rd_pipefd = pipe[0];    // Set rd_pipefd to the new pipe RD FD
+        dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
+        close(pipefd[1]);       // Close the pipe WR FD because it is no longer needed
     } else {
-        rd_from_pipe = true; 
+        // Do not need to read from pipe for command input
+        rd_from_pipe = true;   // Set rd_from_pipe to true to signal pipe read for next command
     }
-    int pipefd[2]; 
-    pipe(pipefd); // pipefd[0] = RD, pipefd[1] = WR
-    close(pipefd[0]); // Close the pipe FD for RD mode because it is not needed, instead pass it to the next command
-    dup2(pipefd[1], 1); // Write the stdout of the command to the pipe file
-    
+
 }
 
 
