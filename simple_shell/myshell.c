@@ -5,20 +5,32 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include "fcntl.h"
+#include "sys/wait.h"
 
 // Call execv with redirection
 void call_and_redirect(const struct pipeline_command *pcmd) {
+    /*
+    * Check if the pipeline_command contains a redirect in.
+    * If it does, open the file and use dup2() to write the
+    * file contents into stdin. Then execute execv(). 
+    */
+    int fd_in; 
+    if (pcmd->redirect_in_path != NULL) {  // Need to open
+        
+    }
+    
+    
     /*
     * Check if the pipeline_command contains a redirect out.
     * If it does, open the file and use dup2() to direct stdout 
     * of execv() to the file. 
     */
-    int fd;
+    int fd_out;
     if (pcmd->redirect_out_path != NULL) {  // Need to open redirect out file for writing 
         fd = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT); // Add O_CREAT flag if needed, need to check out specifications
-        dup2(fd, 1);
+        dup2(fd_out, 1);
     }
-    close(fd);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.
+    close(fd_out);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.
     execv(pcmd->command_args[0], pcmd->command_args);
 }
 
@@ -87,7 +99,8 @@ int main(int argc, char *argv[]) {
         // struct pipeline *pb = pipeline_build("ls\n");
         // struct pipeline *pb = pipeline_build("ls > outfile.txt\n"); 
         // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
-        struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
+//         struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
+        struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
         // printf("hereee***");
         execute_cmds(pb); 
         // printf("hereeeBLEEEEEP");
