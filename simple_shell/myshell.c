@@ -35,6 +35,13 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     close(fd_out);  // With dup2, stdout will be written to the file pointed to by fd. Can close fd.
 }
 
+// Read from the pipe and write to the pipe
+void rdwr_pipe() {
+    /*
+    * Set up a new pipe for interprocess communication with the next command
+    */
+}
+
 
 // Call execute_cmds after pipeline_build
 void execute_cmds(const struct pipeline *pipeline) 
