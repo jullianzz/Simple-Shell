@@ -76,6 +76,8 @@ void setup_pipe(const struct pipeline_command *pcmd) {
     
 }
 
+void 
+
 void execute_cmds(const struct pipeline *pipeline) 
 {
     // printf("yass");
@@ -84,17 +86,23 @@ void execute_cmds(const struct pipeline *pipeline)
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
     rd_from_pipe = false;   // Initialize rd_from_pipe signal
     rd_pipefd = 0;          // Initialize rd_pipefd to avoid undefined behaviour
+    pid_t parent_pid = getpid(); 
 
     while (pcmd != NULL) {
-        pid_t pid = fork(); 
-        if (pid > 0) { /* Parent Process */ 
+        pid_t child_pid = fork(); 
+        if (child_pid > 0) { /* Parent Process */ 
+            printf("Parent pid is %d\n", parent_pid); 
+            printf("Child pid is %d\n", child_pid); 
+            
+            kill(child_pid, SIGTERM); 
+                
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
             // exit(status);   // I think this exits out of the parent process, unsure
          
-        } else if (pid == 0) { /* Child Process */  
+        } else if (child_pid == 0) { /* Child Process */  
             setup_redirection(pcmd); 
-            setup_pipe(pcmd); 
+//             setup_pipe(pcmd); 
             
             /*
             * Check if the first command args has a forward slash. If it does, it 
@@ -121,6 +129,12 @@ void execute_cmds(const struct pipeline *pipeline)
     exit(EXIT_SUCCESS);
 }
 
+void sig_handler() {
+    // child calls kill, parent signal function fires
+    // this sig_handler sets the global rd_pipefd to the one passed
+    // to kill <- figure out how to pass args to signal in kill
+    // that is visible to parent process
+}
 
 int main(int argc, char *argv[]) {
 	// Run shell as empty prompt
@@ -136,7 +150,8 @@ int main(int argc, char *argv[]) {
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
 //         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
-        struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
+//         struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
+        struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
         // printf("hereee***");
         execute_cmds(pb); 
         // printf("hereeeBLEEEEEP");
