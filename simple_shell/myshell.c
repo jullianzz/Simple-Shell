@@ -1,4 +1,5 @@
 #include "myshell_parser.h"
+#include "myshell_signals.h"
 #include "stddef.h"
 #include "string.h"
 #include "stdio.h"
@@ -14,7 +15,7 @@
 * Point stdin and stdout to different files if input or output 
 * redirection paths is not null in pipeline_command
 * For valid pipelines (and this assignment assumes valid
-* pipeline inputs) only the  first and last pipeline 
+* pipeline inputs) only the first and last pipeline 
 * commands can have input and output redirection, respectively. 
 */ 
 void setup_redirection(const struct pipeline_command *pcmd) {
@@ -59,17 +60,14 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
         dup2(rd_pipefd, 0);  // Point stdin to pipe file
         close(rd_pipefd);    // Release old pipe RD FD
-        printf("pcmd is middle or final cmd\n");
  
     } else {    /* pcmd is the first command in the pipeline */ 
-        rd_from_pipe = true;   // Set rd_from_pipe to true to signal pipe read for next command
-        printf("pcmd is first cmd\n");
+        send_rdselect_to_parent(parent_pid, true);  // Set rd_from_pipe to true to signal pipe read for next command
     }
     printf("pcmd is first cmd\n");
     int pipefd[2]; 
     pipe(pipefd); // Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
-    rd_pipefd = pipefd[0];    // Set rd_pipefd to the new pipe RD FD
-    send_val_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 
+    send_fd_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 
     dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
     close(pipefd[1]);       // Release the pipe WR FD because it is no longer needed
     
@@ -77,23 +75,17 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
 
 void execute_cmds(const struct pipeline *pipeline) 
 {
-    // printf("yass");
     int status;
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
     rd_from_pipe = false;   // Initialize rd_from_pipe signal
-    rd_pipefd = 0;          // Initialize rd_pipefd to avoid undefined behaviour
     pid_t parent_pid = getpid(); 
 
     while (pcmd != NULL) {
         pid_t child_pid = fork(); 
         if (child_pid > 0) { /* Parent Process */ 
-            sig_set_handler(SIGUSR1, &signal_handler);  // Invoke signal handler when the SIGUSR1 signal received (sent from child process)
-//             printf("Parent pid is %d\n", parent_pid); 
-//             printf("Child pid is %d\n", child_pid); 
-            
-//             kill(child_pid, SIGTERM); 
-            
+            install_action(SIGUSR1, &recv_rdfd_action);      // Invoke recv_rdfd_action signal handler when the SIGUSR1 signal received
+            install_action(SIGUSR2, &recv_rdselect_action);  // Invoke recv_rdselect_action signal handler when the SIGUSR2 signal received
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
             // exit(status);   // I think this exits out of the parent process, unsure
@@ -141,11 +133,9 @@ int main(int argc, char *argv[]) {
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
 //         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
-//         struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
-        struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
-        // printf("hereee***");
+        struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
+//         struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
         execute_cmds(pb); 
-        // printf("hereeeBLEEEEEP");
 	} 
 	else if (argc == 2) {
         // Run with 'my_shell$' prompt
