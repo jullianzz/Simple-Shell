@@ -9,8 +9,6 @@
 #include "stdbool.h"
 #include "signal.h"
 
-bool rd_from_pipe;   // rd_from_pipe is true for all commands in the pipeline, except for the first
-int rd_pipefd;               // File descriptor of pipe file to read from for input to current command 
 
 /*
 * Point stdin and stdout to different files if input or output 
@@ -48,7 +46,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
 * Read from pipe file for input to current command, and create
 * a new pipe for interprocess communication with the next command. 
 */ 
-void setup_pipe(const struct pipeline_command *pcmd) {
+void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     /*
     * Check if the pcmd is either a middle or final command in the pipeline. 
     * If pcmd is the first command in the pipeline, create a new pipe file, 
@@ -71,12 +69,11 @@ void setup_pipe(const struct pipeline_command *pcmd) {
     int pipefd[2]; 
     pipe(pipefd); // Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
     rd_pipefd = pipefd[0];    // Set rd_pipefd to the new pipe RD FD
+    send_val_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 
     dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
     close(pipefd[1]);       // Release the pipe WR FD because it is no longer needed
     
 }
-
-void 
 
 void execute_cmds(const struct pipeline *pipeline) 
 {
@@ -91,18 +88,19 @@ void execute_cmds(const struct pipeline *pipeline)
     while (pcmd != NULL) {
         pid_t child_pid = fork(); 
         if (child_pid > 0) { /* Parent Process */ 
-            printf("Parent pid is %d\n", parent_pid); 
-            printf("Child pid is %d\n", child_pid); 
+            sig_set_handler(SIGUSR1, &signal_handler);  // Invoke signal handler when the SIGUSR1 signal received (sent from child process)
+//             printf("Parent pid is %d\n", parent_pid); 
+//             printf("Child pid is %d\n", child_pid); 
             
-            kill(child_pid, SIGTERM); 
-                
+//             kill(child_pid, SIGTERM); 
+            
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
             // exit(status);   // I think this exits out of the parent process, unsure
          
         } else if (child_pid == 0) { /* Child Process */  
             setup_redirection(pcmd); 
-//             setup_pipe(pcmd); 
+            setup_pipe(pcmd, parent_pid); 
             
             /*
             * Check if the first command args has a forward slash. If it does, it 
@@ -127,13 +125,6 @@ void execute_cmds(const struct pipeline *pipeline)
         }
     }
     exit(EXIT_SUCCESS);
-}
-
-void sig_handler() {
-    // child calls kill, parent signal function fires
-    // this sig_handler sets the global rd_pipefd to the one passed
-    // to kill <- figure out how to pass args to signal in kill
-    // that is visible to parent process
 }
 
 int main(int argc, char *argv[]) {
