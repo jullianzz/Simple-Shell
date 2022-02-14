@@ -10,6 +10,10 @@
 #include "signal.h"
 
 
+bool rd_from_pipe = false; // Define and initialize rd_from_pipe global variable
+int rd_pipefd = 0;             // Define rd_pipefd global variable
+
+
 /*
 * Point stdin and stdout to different files if input or output 
 * redirection paths is not null in pipeline_command
@@ -63,7 +67,6 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     } else {    /* pcmd is the first command in the pipeline */ 
         send_rdselect_to_parent(parent_pid, true);  // Set rd_from_pipe to true to signal pipe read for next command
     }
-    printf("pcmd is first cmd\n");
     int pipefd[2]; 
     pipe(pipefd); // Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
     send_fd_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 
@@ -77,7 +80,8 @@ void execute_cmds(const struct pipeline *pipeline)
     int status;
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
-    rd_from_pipe = false;   // Initialize rd_from_pipe signal
+//     bool rd_from_pipe = false; // Define and initialize rd_from_pipe global variable
+//     int rd_pipefd;             // Define rd_pipefd global variable
     pid_t parent_pid = getpid(); 
 
     while (pcmd != NULL) {
