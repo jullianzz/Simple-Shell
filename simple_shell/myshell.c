@@ -31,6 +31,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     if (pcmd->redirect_in_path != NULL) {
 //         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
+        close(0); 
         dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
         close(fd_in);    // Release fd_in file descriptor
     }
@@ -43,6 +44,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     if (pcmd->redirect_out_path != NULL) {
 //         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_out = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC);
+        close(1); 
         dup2(fd_out, 1);
         close(fd_out);  // Release fd_out file descriptor
     }
@@ -64,6 +66,7 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     */
     
     if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
+        close(0); 
         dup2(current_rd_pipefd, 0);  // Point stdin to pipe file
         close(current_rd_pipefd);    // Release old pipe RD FD
 //         printf("%s command is middle or final command in the pipeline\n", pcmd->command_args[0]); 
@@ -74,6 +77,7 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
 
     if (pcmd->next != NULL) {
 //         printf("%s not the final cmd\n", pcmd->command_args[0]);
+        close(1); 
         dup2(wr_pipefd, 1);     // Write the stdout of the command to the pipe file
     } else {
 //         printf("%s is the final cmd\n", pcmd->command_args[0]);
@@ -84,7 +88,6 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
 
 void execute_cmds(const struct pipeline *pipeline) 
 {
-//     int status;
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
     pid_t parent_pid = getpid(); 
@@ -151,7 +154,32 @@ void execute_cmds(const struct pipeline *pipeline)
         
     }
 //     printf("exited!\n");
-    exit(EXIT_SUCCESS);
+//     exit(EXIT_SUCCESS);
+}
+
+const char* read_cmds() {
+    printf("my_shell$");
+    char *input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
+    fgets(input_line, MAX_LINE_LENGTH, stdin);   
+
+    return input_line; 
+}
+
+void repl_cmds() {
+    // while signal not received - implement with while loop
+    while (true) {
+//         const char *input_line = read_cmds();
+        printf("my_shell$");
+        char *input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
+        fgets(input_line, MAX_LINE_LENGTH, stdin);   
+        free(input_line);
+
+//     return input_line; 
+        struct pipeline *pb = pipeline_build(input_line); 
+        execute_cmds(pb); 
+        free(pb); 
+    }
+    
 }
 
 int main(int argc, char *argv[]) {
@@ -172,10 +200,12 @@ int main(int argc, char *argv[]) {
 //         struct pipeline *pb = pipeline_build("ls -al | wc\n");
 //         struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
 //             struct pipeline *pb = pipeline_build("ls -al | ls -al\n");
-        struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");
+//         struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");
 //         struct pipeline *pb = pipeline_build("ls -l | more\n");
 //         struct pipeline *pb = pipeline_build("sort garbo_file.txt | uniq\n");
-        execute_cmds(pb); 
+//         struct pipeline *pb = pipeline_build("whoami  \n");
+//         execute_cmds(pb); 
+        repl_cmds();
 	} 
 	else if (argc == 2) {
         // Run with 'my_shell$' prompt
