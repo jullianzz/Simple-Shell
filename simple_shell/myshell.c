@@ -29,7 +29,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     * file contents into stdin. Then execute execv(). 
     */
     if (pcmd->redirect_in_path != NULL) {
-        printf("%s doing this shit\n", pcmd->command_args[0]);
+//         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
         dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
         close(fd_in);    // Release fd_in file descriptor
@@ -41,7 +41,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     * of execv() to the file. 
     */
     if (pcmd->redirect_out_path != NULL) {
-        printf("%s doing this shit\n", pcmd->command_args[0]);
+//         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_out = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC);
         dup2(fd_out, 1);
         close(fd_out);  // Release fd_out file descriptor
@@ -66,17 +66,17 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
         dup2(current_rd_pipefd, 0);  // Point stdin to pipe file
         close(current_rd_pipefd);    // Release old pipe RD FD
-        printf("%s command is middle or final command in the pipeline\n", pcmd->command_args[0]); 
+//         printf("%s command is middle or final command in the pipeline\n", pcmd->command_args[0]); 
  
     } else {    /* pcmd is the first command in the pipeline */ 
-        printf("%s command is first command in the pipeline\n", pcmd->command_args[0]); 
+//         printf("%s command is first command in the pipeline\n", pcmd->command_args[0]); 
     }
 
     if (pcmd->next != NULL) {
-        printf("%s not the final cmd\n", pcmd->command_args[0]);
+//         printf("%s not the final cmd\n", pcmd->command_args[0]);
         dup2(wr_pipefd, 1);     // Write the stdout of the command to the pipe file
     } else {
-        printf("%s is the final cmd\n", pcmd->command_args[0]);
+//         printf("%s is the final cmd\n", pcmd->command_args[0]);
     }
     close(wr_pipefd);       // Release the pipe WR FD because it is no longer needed
     
@@ -84,7 +84,7 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
 
 void execute_cmds(const struct pipeline *pipeline) 
 {
-    int status;
+//     int status;
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
     pid_t parent_pid = getpid(); 
@@ -93,29 +93,39 @@ void execute_cmds(const struct pipeline *pipeline)
         /*
         * Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
         */ 
+        
+//         printf("top of while loop\n");
+
         int pipefd[2]; 
         pipe(pipefd);
         next_rd_pipefd = pipefd[0]; 
         wr_pipefd = pipefd[1]; 
         
+        
         /*
         * Fork and execute commands in a while loop
         */ 
+        int status; 
         pid_t child_pid = fork();
         if (child_pid > 0) { /* Parent Process */ 
-            waitpid(0, &status, 0);
-            
-            current_rd_pipefd = next_rd_pipefd; 
+//             printf("waiting for the child\n");
+            close(wr_pipefd);  // Close write end of the pipe
+            waitpid(child_pid, &status, 0);
+
+            close(current_rd_pipefd);  // Close read end of the pipe
+            current_rd_pipefd = next_rd_pipefd; // Set current RD FD
             if (!rd_from_pipe) {
-                printf("changed read cond!\n");
+//                 printf("changed read cond!\n");
                 rd_from_pipe = true; 
             }
             
-            printf("HAAIR\n");
+//             printf("HAAIR\n");
             
             pcmd = pcmd->next; 
          
         } else if (child_pid == 0) { /* Child Process */  
+            close(next_rd_pipefd);
+            
             setup_redirection(pcmd); 
             setup_pipe(pcmd, parent_pid); 
             
@@ -132,7 +142,7 @@ void execute_cmds(const struct pipeline *pipeline)
                 execv(pcmd->command_args[0], pcmd->command_args);
             }
 
-            exit(EXIT_SUCCESS); 
+//             exit(EXIT_SUCCESS); 
 
         } else {
             perror("Fork was unsuccessful");
@@ -140,6 +150,7 @@ void execute_cmds(const struct pipeline *pipeline)
         }
         
     }
+//     printf("exited!\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -161,9 +172,9 @@ int main(int argc, char *argv[]) {
 //         struct pipeline *pb = pipeline_build("ls -al | wc\n");
 //         struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
 //             struct pipeline *pb = pipeline_build("ls -al | ls -al\n");
-//         struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");
+        struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");
 //         struct pipeline *pb = pipeline_build("ls -l | more\n");
-        struct pipeline *pb = pipeline_build("sort garbo_file.txt | uniq\n");
+//         struct pipeline *pb = pipeline_build("sort garbo_file.txt | uniq\n");
         execute_cmds(pb); 
 	} 
 	else if (argc == 2) {
