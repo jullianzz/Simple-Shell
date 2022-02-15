@@ -140,15 +140,19 @@ void execute_cmds(const struct pipeline *pipeline)
             * indicates that the command arg contains directory information and 
             * need to use execv. Else, use execvp to search PATH environment. 
             */  
+            int exec_status; 
             if (strchr(pcmd->command_args[0], '/') == NULL) {
                 // Forward slash is not present in command_args[0] - use execvp
-                execvp(pcmd->command_args[0], pcmd->command_args);
+                exec_status = execvp(pcmd->command_args[0], pcmd->command_args);
             } else {
                 // Foward slash is present in command_args[0] - use execv 
-                execv(pcmd->command_args[0], pcmd->command_args);
+                exec_status = execv(pcmd->command_args[0], pcmd->command_args);
             }
-
-//             exit(EXIT_SUCCESS); 
+            
+            if (exec_status == -1) {
+                perror("ERROR: try: No such file or directory");
+            }
+            exit(EXIT_FAILURE); 
 
         } else {
             perror("Fork was unsuccessful");
@@ -190,9 +194,7 @@ void repl_cmds(bool print_prompt) {
 
 int main(int argc, char *argv[]) {
 	// Run shell as empty prompt
-	if (argc == 1) { 
-		// instantiate myshell 
-		// myshell(1); 
+	if (argc == 1) {   /* Run with "my_shell$" prompt */
         // printf("hereee___");
 //         struct pipeline *pb = pipeline_build("/bin/ls\n"); 
 //         struct pipeline *pb = pipeline_build("ls\n");
@@ -214,15 +216,12 @@ int main(int argc, char *argv[]) {
         
         repl_cmds(true);
 	} 
-	else if (argc == 2) {
-        // Run with 'my_shell$' prompt
-        // Check if argv[1] == "-n"
-		// instantiate myshell 
-		// myshell(0); 
+	else if (argc == 2 && strcmp(argv[1], "-n") == 0) {  /* Run without prompt */  
         repl_cmds(false); 
 	} 
 	else {
 		// error handling goes here for argc > 2
+        perror("ERROR: Invalid environment variables passed to shell.");
 	}
 
 
