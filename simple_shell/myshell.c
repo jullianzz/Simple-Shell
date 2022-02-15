@@ -14,6 +14,7 @@ bool rd_from_pipe = false;   // Define and initialize rd_from_pipe global variab
 int next_rd_pipefd = -1;       // Define global variable
 int current_rd_pipefd = -1; 
 int wr_pipefd = -1; 
+// char prompt[] = "myshell"
 
 /*
 * Point stdin and stdout to different files if input or output 
@@ -160,44 +161,30 @@ void execute_cmds(const struct pipeline *pipeline)
 }
 
 const char* read_cmds() {
-    printf("my_shell$");
+//     printf("my_shell$");
     char *input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
     input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);   
 
     return input_line; 
 }
 
-void repl_cmds() {
+void repl_cmds(bool print_prompt) {
     // while signal not received - implement with while loop
     char *input_line; 
     struct pipeline *pb; 
     
     while (true) {
-        printf("my_shell$");
+        if (print_prompt) {
+            printf("my_shell$"); 
+        }
         input_line = NULL; 
-//         char* input_line2 = NULL;
         input_line = malloc(sizeof(char)* MAX_LINE_LENGTH);
         input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);
-//         input_line2 = input_line2;
         pb = pipeline_build(input_line); 
         execute_cmds(pb); 
         free(input_line);
         free(pb); 
     }
-
-//     printf("my_shell$\n");
-//     input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
-//     input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);   
-//     pb = pipeline_build(input_line); 
-//     execute_cmds(pb); 
-//     free(input_line);
-//     free(pb); 
-    
-//     fflush(stdin);
-//     printf("my_shell$\n");
-//     fflush(stdin);
-//     input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
-//     input_line = fgets(input_line, MAX_LINE_LENGTH, stdin); 
     
 }
 
@@ -224,13 +211,15 @@ int main(int argc, char *argv[]) {
 //         struct pipeline *pb = pipeline_build("sort garbo_file.txt | uniq\n");
 //         struct pipeline *pb = pipeline_build("whoami  \n");
 //         execute_cmds(pb); 
-        repl_cmds();
+        
+        repl_cmds(true);
 	} 
 	else if (argc == 2) {
         // Run with 'my_shell$' prompt
         // Check if argv[1] == "-n"
 		// instantiate myshell 
 		// myshell(0); 
+        repl_cmds(false); 
 	} 
 	else {
 		// error handling goes here for argc > 2
