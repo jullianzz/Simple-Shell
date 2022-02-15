@@ -10,10 +10,10 @@
 #include "signal.h"
 
 
-bool rd_from_pipe = false; // Define and initialize rd_from_pipe global variable
-int rd_pipefd = 0;             // Define rd_pipefd global variable
-bool is_final_cmd = false; 
-
+bool rd_from_pipe = false;   // Define and initialize rd_from_pipe global variable
+int next_rd_pipefd = 0;       // Define global variable
+int current_rd_pipefd = 0; 
+int wr_pipefd = 0; 
 
 /*
 * Point stdin and stdout to different files if input or output 
@@ -64,8 +64,8 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     */
    
     if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
-        dup2(rd_pipefd, 0);  // Point stdin to pipe file
-        close(rd_pipefd);    // Release old pipe RD FD
+        dup2(current_rd_pipefd, 0);  // Point stdin to pipe file
+        close(current_rd_pipefd);    // Release old pipe RD FD
 //         printf("%s command is middle or final command in the pipeline\n", pcmd->command_args[0]); 
  
     } else {    /* pcmd is the first command in the pipeline */ 
@@ -74,12 +74,12 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     }
     int pipefd[2]; 
     pipe(pipefd); // Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
-    send_fd_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 7u98i8i
+//     send_fd_to_parent(parent_pid, pipefd[0]);   // Signal rd_pipefd value to parent process 
     if (pcmd->next != NULL) {
 //         printf("%s not the  final cmd\n", pcmd->command_args[0]);
-        dup2(pipefd[1], 1);     // Write the stdout of the command to the pipe file
+        dup2(wr_pipefd, 1);     // Write the stdout of the command to the pipe file
     }
-    close(pipefd[1]);       // Release the pipe WR FD because it is no longer needed
+    close(wr_pipefd);       // Release the pipe WR FD because it is no longer needed
     
 }
 
@@ -88,17 +88,23 @@ void execute_cmds(const struct pipeline *pipeline)
     int status;
     struct pipeline_command *pcmd; // Initialize pipeline_command pointer
     pcmd = pipeline->commands; // Point pcmd to first command in the linked list
-//     bool rd_from_pipe = false; // Define and initialize rd_from_pipe global variable
-//     int rd_pipefd;             // Define rd_pipefd global variable
     pid_t parent_pid = getpid(); 
-    if (pcmd->next == NULL) {
-        is_final_cmd = true; 
-    }
 
     while (pcmd != NULL) {
-        pid_t child_pid = fork(); 
+        /*
+        * Create a new pipe file, pipefd[0] = RD, pipefd[1] = WR
+        */ 
+        int pipefd[2]; 
+        pipe(pipefd);
+        next_rd_pipefd = pipefd[0]; 
+        wr_pipefd = pipefd[1]; 
+        
+        /*
+        * Fork and execute commands in a while loop
+        */ 
+        pid_t child_pid = fork();
         if (child_pid > 0) { /* Parent Process */ 
-            install_action(SIGUSR1, &recv_rdfd_action);      // Invoke recv_rdfd_action signal handler when the SIGUSR1 signal received
+//             install_action(SIGUSR1, &recv_rdfd_action);      // Invoke recv_rdfd_action signal handler when the SIGUSR1 signal received
             install_action(SIGUSR2, &recv_rdselect_action);  // Invoke recv_rdselect_action signal handler when the SIGUSR2 signal received
             waitpid(0, &status, 0);
             pcmd = pcmd->next; 
@@ -114,9 +120,7 @@ void execute_cmds(const struct pipeline *pipeline)
             * need to use execv. Else, use execvp to search PATH environment. 
             */  
             if (strchr(pcmd->command_args[0], '/') == NULL) {
-                /*
-                * Forward slash is not present in command_args[0] - use execvp
-                */
+                // Forward slash is not present in command_args[0] - use execvp
                 execvp(pcmd->command_args[0], pcmd->command_args);
             } else {
                 // Foward slash is present in command_args[0] - use execv 
@@ -129,6 +133,8 @@ void execute_cmds(const struct pipeline *pipeline)
             perror("Fork was unsuccessful");
             exit(EXIT_FAILURE);
         }
+        
+        current_rd_pipefd = next_rd_pipefd; 
     }
     exit(EXIT_SUCCESS);
 }
@@ -140,14 +146,14 @@ int main(int argc, char *argv[]) {
 		// myshell(1); 
         // printf("hereee___");
 //         struct pipeline *pb = pipeline_build("/bin/ls\n"); 
-//         struct pipeline *pb = pipeline_build("ls\n");
+        struct pipeline *pb = pipeline_build("ls\n");
         // struct pipeline *pb = pipeline_build("ls > outfile.txt\n"); 
         // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
 //         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
 //         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
 //         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
-        struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
+//         struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
 //         struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
 //             struct pipeline *pb = pipeline_build("ls -al | ls -al\n");
 //         struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");

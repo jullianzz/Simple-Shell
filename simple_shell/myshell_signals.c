@@ -36,7 +36,7 @@ void send_rdselect_to_parent(pid_t pid, int fd) {
 
 // Handle sigqueue from child process that sends the pipe RD file descriptor
 void recv_rdfd_action(int signo, siginfo_t *siginfo, void *context) {
-    rd_pipefd = siginfo->si_value.sival_int; // Set the global variable srd_pipefd to the value passed to sigaction from sigqueue
+    next_rd_pipefd = siginfo->si_value.sival_int; // Set the global variable srd_pipefd to the value passed to sigaction from sigqueue
 }
 
 // Handle sigqueue from child process that sends the RD select
