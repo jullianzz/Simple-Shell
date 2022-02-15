@@ -1,5 +1,5 @@
 # override CFLAGS := -Wall -Werror -std=gnu99 -O1 -g $(CFLAGS) -I.
-FLAGS = -Wall -Werror -std=gnu99 -O1
+FLAGS = -Wall -Werror -std=gnu99 -g -O1
 
 all: myshell
 	$(CC) $(FLAGS) myshell_signals.c myshell_parser.c myshell.c -o myshell

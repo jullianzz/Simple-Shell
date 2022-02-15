@@ -11,9 +11,9 @@
 
 
 bool rd_from_pipe = false;   // Define and initialize rd_from_pipe global variable
-int next_rd_pipefd = 0;       // Define global variable
-int current_rd_pipefd = 0; 
-int wr_pipefd = 0; 
+int next_rd_pipefd = -1;       // Define global variable
+int current_rd_pipefd = -1; 
+int wr_pipefd = -1; 
 
 /*
 * Point stdin and stdout to different files if input or output 
@@ -31,7 +31,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     if (pcmd->redirect_in_path != NULL) {
 //         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
-        close(0); 
+//         close(0); 
         dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
         close(fd_in);    // Release fd_in file descriptor
     }
@@ -44,7 +44,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     if (pcmd->redirect_out_path != NULL) {
 //         printf("%s doing this shit\n", pcmd->command_args[0]);
         int fd_out = open(pcmd->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IWGRP | S_IWOTH);
-        close(1); 
+//         close(1); 
         dup2(fd_out, 1);
         close(fd_out);  // Release fd_out file descriptor
     }
@@ -66,7 +66,7 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
     */
     
     if (rd_from_pipe) {    /* pcmd is a middle or final command in the pipeline */ 
-        close(0); 
+//         close(0); 
         dup2(current_rd_pipefd, 0);  // Point stdin to pipe file
         close(current_rd_pipefd);    // Release old pipe RD FD
 //         printf("%s command is middle or final command in the pipeline\n", pcmd->command_args[0]); 
@@ -77,7 +77,7 @@ void setup_pipe(const struct pipeline_command *pcmd, pid_t parent_pid) {
 
     if (pcmd->next != NULL) {
 //         printf("%s not the final cmd\n", pcmd->command_args[0]);
-        close(1); 
+//         close(1); 
         dup2(wr_pipefd, 1);     // Write the stdout of the command to the pipe file
     } else {
 //         printf("%s is the final cmd\n", pcmd->command_args[0]);
@@ -169,18 +169,35 @@ const char* read_cmds() {
 
 void repl_cmds() {
     // while signal not received - implement with while loop
+    char *input_line; 
+    struct pipeline *pb; 
+    
     while (true) {
-//         const char *input_line = read_cmds();
         printf("my_shell$");
-        char *input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
-        input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);   
-        free(input_line);
-
-//     return input_line; 
-        struct pipeline *pb = pipeline_build(input_line); 
+        input_line = NULL; 
+//         char* input_line2 = NULL;
+        input_line = malloc(sizeof(char)* MAX_LINE_LENGTH);
+        input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);
+//         input_line2 = input_line2;
+        pb = pipeline_build(input_line); 
         execute_cmds(pb); 
-        pipeline_free(pb);
+        free(input_line);
+        free(pb); 
     }
+
+//     printf("my_shell$\n");
+//     input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
+//     input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);   
+//     pb = pipeline_build(input_line); 
+//     execute_cmds(pb); 
+//     free(input_line);
+//     free(pb); 
+    
+//     fflush(stdin);
+//     printf("my_shell$\n");
+//     fflush(stdin);
+//     input_line = (char *) malloc(sizeof(char)* MAX_LINE_LENGTH);
+//     input_line = fgets(input_line, MAX_LINE_LENGTH, stdin); 
     
 }
 

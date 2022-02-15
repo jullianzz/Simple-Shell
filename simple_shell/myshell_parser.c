@@ -126,7 +126,10 @@ struct pipeline *pipeline_build(const char *command_line)
 	********************************** Solve the Lexing Problem ********************************
 	********************************************************************************************/
 
-	const int cmdl_len = strlen(command_line) + 1; 	// Find size of command_line string
+    if (command_line == NULL) {
+        printf("yas\n");
+    }
+	int cmdl_len = strlen(command_line) + 1; 	// Find size of command_line string
 	int rtc = 0; 	// rtc stands for running tokens count, it increments by 1 after a token pointer is added to tokens_ds
 
 	/*
