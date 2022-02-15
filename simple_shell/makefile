@@ -1,18 +1,18 @@
-override CFLAGS := -Wall -Werror -std=gnu99 -O1 -g $(CFLAGS) -I.
+# override CFLAGS := -Wall -Werror -std=gnu99 -O1 -g $(CFLAGS) -I.
+FLAGS = -Wall -Werror -std=gnu99 -O1
 
-all: myshell_parser myshell_signals myshell
-    $(CC) $(CFLAGS) myshell_parser.o myshell_signals.o myshell.o -o main
-    #./myshell
+all: myshell
+	$(CC) $(FLAGS) myshell_signals.c myshell_parser.c myshell.c -o myshell
+	#./myshell
     
 myshell_parser: myshell_parser.c myshell_parser.h
-    $(CC) $(CFLAGS) myshell_parser.c -o myshell_parser.o
+	touch myshell_parser
     
 myshell_signals: myshell_signals.c myshell_signals.h
-    $(CC) $(CFLAGS) myshell_signals.c -o myshell_signals.o
+	touch myshell_signals
     
-myshell: myshell.c myshell_parser.o myshell_signals.o
-    $(CC) $(CFLAGS) myshell_signals.c -o myshell.o
-    
+myshell: myshell.c myshell_parser myshell_signals
+	touch myshell
 
 clean:
 	rm -f *.o
