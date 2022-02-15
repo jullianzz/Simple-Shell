@@ -179,7 +179,7 @@ void repl_cmds() {
 //     return input_line; 
         struct pipeline *pb = pipeline_build(input_line); 
         execute_cmds(pb); 
-        free(pb); 
+        pipeline_free(pb);
     }
     
 }

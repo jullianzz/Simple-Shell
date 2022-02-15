@@ -241,6 +241,7 @@ struct pipeline *pipeline_build(const char *command_line)
 void pipeline_free(struct pipeline *pipeline)
 {
 	// TODO: Implement this function
+    free(pipeline);
 }
 
 
