@@ -188,6 +188,7 @@ void repl_cmds(bool print_prompt) {
         execute_cmds(pb); 
         free(input_line);
         free(pb); 
+//         pipeline_free(pb); 
     }
     
 }

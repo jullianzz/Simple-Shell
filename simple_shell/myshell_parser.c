@@ -50,7 +50,9 @@ void split_symbols(char *beg, char *end, char *tokens_ds[], int *rtc) {
 		if (*hptr != '\0') {
 			tokens_ds[*rtc] = hptr; 		// Add symbol to tokens_ds
 			*rtc = *rtc + 1; 				// Increment rtc by 1
-		}
+		} else {
+            free(hptr);  // Free hptr if it will not be added to tokens_ds, otherwise. It will not be freed in pipeline_free
+        }
 	}
 }
 
@@ -241,9 +243,8 @@ struct pipeline *pipeline_build(const char *command_line)
 	return pipeline;
 }
 
-void pipeline_free(struct pipeline *pipeline)
-{
-	// TODO: Implement this function
+void pipeline_free(struct pipeline *pipeline) {
+
     // Implement pipeline_free using two pointers to 
     // free each field and structure created using
     // malloc within pipeline
@@ -251,21 +252,26 @@ void pipeline_free(struct pipeline *pipeline)
     struct pipeline_command *ccp;   // ccp is current pipeline_command pointer
     struct pipeline_command *ncp;   // ncp is next pipeline_command pointer
     
-    char *carg;    // carg is current command arg pointer
-    char *narg;    // narg is next command arg pointer
+//     char *carg;    // carg is current command arg pointer
+//     char *narg;    // narg is next command arg pointer
     
     ccp = pipeline->commands; 
         
     while (ccp != NULL) {
         ncp = ccp->next; 
-        // Need to free each field and also each argument in command_args
-        carg = ccp->command_args[0];
-        narg = ccp->command_args[1]; 
-        int i = 0; 
-        while (cargp != NULL) {
-            narg = carg
-            i ++; 
-        }
+        // Free each element in command_args
+//         carg = ccp->command_args[0];
+//         while (carg != NULL) {
+//             narg = carg + 1; 
+//             free(carg); 
+//             carg = narg; 
+//         }
+        
+        // Free redirect_in_path
+        free(ccp->redirect_in_path); 
+        
+        // Free redirect_out_path
+        free(ccp->redirect_out_path); 
 
         free(ccp);  // Release current pipeline command
         ccp = ncp;  // Point current pointer to next pointer
