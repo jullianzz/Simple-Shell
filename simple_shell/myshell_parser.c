@@ -219,19 +219,19 @@ struct pipeline *pipeline_build(const char *command_line)
 
 			/* Token '<' indicates a redirect in path */
 			case '<':
+                tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
                 if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
                     perror("ERROR: Redirection error"); 
                 }
-				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
 				pcmds_iterator->redirect_in_path = tokens_ds[tokens_ds_idx]; 
 				break;
 
 			/* Token '>' indicates a redirect out path */
 			case '>':
+                tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
                 if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
                     perror("ERROR: Redirection error"); 
                 }
-				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
 				pcmds_iterator->redirect_out_path = tokens_ds[tokens_ds_idx]; 
 				break; 
 

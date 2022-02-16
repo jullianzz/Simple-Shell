@@ -150,7 +150,7 @@ void execute_cmds(const struct pipeline *pipeline)
             exit(EXIT_FAILURE); 
 
         } else {
-            perror("Fork was unsuccessful");
+            perror("ERROR: Fork was unsuccessful");
             exit(EXIT_FAILURE);
         }
         
