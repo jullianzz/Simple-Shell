@@ -244,6 +244,34 @@ struct pipeline *pipeline_build(const char *command_line)
 void pipeline_free(struct pipeline *pipeline)
 {
 	// TODO: Implement this function
+    // Implement pipeline_free using two pointers to 
+    // free each field and structure created using
+    // malloc within pipeline
+    
+    struct pipeline_command *ccp;   // ccp is current pipeline_command pointer
+    struct pipeline_command *ncp;   // ncp is next pipeline_command pointer
+    
+    char *carg;    // carg is current command arg pointer
+    char *narg;    // narg is next command arg pointer
+    
+    ccp = pipeline->commands; 
+        
+    while (ccp != NULL) {
+        ncp = ccp->next; 
+        // Need to free each field and also each argument in command_args
+        carg = ccp->command_args[0];
+        narg = ccp->command_args[1]; 
+        int i = 0; 
+        while (cargp != NULL) {
+            narg = carg
+            i ++; 
+        }
+
+        free(ccp);  // Release current pipeline command
+        ccp = ncp;  // Point current pointer to next pointer
+    }
+    
+    // Free the pipeline struct
     free(pipeline);
 }
 
