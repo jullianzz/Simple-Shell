@@ -186,32 +186,13 @@ void repl_cmds(bool print_prompt) {
 int main(int argc, char *argv[]) {
 	// Run shell as empty prompt
 	if (argc == 1) {   /* Run with "my_shell$" prompt */
-        // printf("hereee___");
-//         struct pipeline *pb = pipeline_build("/bin/ls\n"); 
-//         struct pipeline *pb = pipeline_build("ls\n");
-//         struct pipeline *pb = pipeline_build("ls > outfile.txt\n"); 
-        // struct pipeline *pb = pipeline_build("ls -al | cat garbo_file.txt\n"); 
-//         struct pipeline *pb = pipeline_build("ls -al > outfile.txt\n"); 
-//         struct pipeline *pb = pipeline_build("ls -al > outfile.txt | cat garbo_file.txt\n"); 
-//         struct pipeline *pb = pipeline_build("echo wowza > outfile.txt \n"); 
-//         struct pipeline *pb = pipeline_build("cat < garbo_file.txt > outfile.txt\n"); 
-//         struct pipeline *pb = pipeline_build("ls -al | wc -l\n"); // this command tests piping
-//         struct pipeline *pb = pipeline_build("ls -al | wc\n");
-//         struct pipeline *pb = pipeline_build("wc \n"); // Use this instruction to test signal and kill
-//             struct pipeline *pb = pipeline_build("ls -al | ls -al\n");
-//         struct pipeline *pb = pipeline_build("ls -al | wc -l > outfile.txt \n");
-//         struct pipeline *pb = pipeline_build("ls -l | more\n");
-//         struct pipeline *pb = pipeline_build("sort garbo_file.txt | uniq\n");
-//         struct pipeline *pb = pipeline_build("whoami  \n");
-//         execute_cmds(pb); 
-        
         repl_cmds(true);
 	} 
 	else if (argc == 2 && strcmp(argv[1], "-n") == 0) {  /* Run without prompt */  
         repl_cmds(false); 
 	} 
 	else {
-		// error handling goes here for argc > 2
+		// error handling for argc > 2
         perror("ERROR: Invalid environment variables passed to shell.");
 	}
 

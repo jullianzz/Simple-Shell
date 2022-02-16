@@ -200,6 +200,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	*/ 	
 	int tokens_ds_idx = 0; 
 	int cmd_args_idx = 0; 
+    
 	while (tokens_ds_idx != rtc) {
 		switch (*tokens_ds[tokens_ds_idx]) {
 
@@ -218,12 +219,18 @@ struct pipeline *pipeline_build(const char *command_line)
 
 			/* Token '<' indicates a redirect in path */
 			case '<':
+                if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
+                    perror("ERROR: Redirection error"); 
+                }
 				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
 				pcmds_iterator->redirect_in_path = tokens_ds[tokens_ds_idx]; 
 				break;
 
 			/* Token '>' indicates a redirect out path */
 			case '>':
+                if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
+                    perror("ERROR: Redirection error"); 
+                }
 				tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
 				pcmds_iterator->redirect_out_path = tokens_ds[tokens_ds_idx]; 
 				break; 
