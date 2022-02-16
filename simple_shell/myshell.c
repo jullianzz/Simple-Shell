@@ -8,6 +8,7 @@
 #include "fcntl.h"
 #include "sys/wait.h"
 #include "signal.h"
+#include "errno.h"
 
 
 bool rd_from_pipe = false;   // Define and initialize rd_from_pipe global variable
@@ -154,6 +155,10 @@ void execute_cmds(const struct pipeline *pipeline)
             if (exec_status == -1) {
                 perror("ERROR: try");
             }
+//             printf("GOT ERROR\n");
+//             if (errno == EACCES) {
+//                 perror("access error!");
+//             }
             exit(EXIT_FAILURE); 
 
         } else {
@@ -186,11 +191,15 @@ void repl_cmds(bool print_prompt) {
         input_line = NULL; 
         input_line = malloc(sizeof(char)* MAX_LINE_LENGTH);
         input_line = fgets(input_line, MAX_LINE_LENGTH, stdin);
-        pb = pipeline_build(input_line); 
-        execute_cmds(pb); 
-        free(input_line);
-        free(pb); 
+        if (input_line != NULL) {
+            pb = pipeline_build(input_line); 
+            execute_cmds(pb); 
+            free(input_line);
+            free(pb); 
 //         pipeline_free(pb); 
+        } else {
+            break;
+        }
     }
     
 }
