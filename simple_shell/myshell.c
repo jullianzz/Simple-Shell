@@ -116,7 +116,9 @@ void execute_cmds(const struct pipeline *pipeline)
         if (child_pid > 0) { /* Parent Process */ 
 //             printf("waiting for the child\n");
             close(wr_pipefd);  // Close write end of the pipe
-            waitpid(child_pid, &status, 0);
+            if (!(pipeline->is_background)) {   // If is_background is false, wait for the child process to terminate
+                waitpid(child_pid, &status, 0);
+            }
 
             close(current_rd_pipefd);  // Close read end of the pipe
             current_rd_pipefd = next_rd_pipefd; // Set current RD FD
@@ -150,7 +152,7 @@ void execute_cmds(const struct pipeline *pipeline)
             }
             
             if (exec_status == -1) {
-                perror("ERROR: try: No such file or directory");
+                perror("ERROR: try");
             }
             exit(EXIT_FAILURE); 
 

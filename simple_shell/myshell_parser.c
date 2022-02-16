@@ -252,20 +252,20 @@ void pipeline_free(struct pipeline *pipeline) {
     struct pipeline_command *ccp;   // ccp is current pipeline_command pointer
     struct pipeline_command *ncp;   // ncp is next pipeline_command pointer
     
-//     char *carg;    // carg is current command arg pointer
-//     char *narg;    // narg is next command arg pointer
+    char *carg;    // carg is current command arg pointer
+    char *narg;    // narg is next command arg pointer
     
     ccp = pipeline->commands; 
         
     while (ccp != NULL) {
         ncp = ccp->next; 
-        // Free each element in command_args
-//         carg = ccp->command_args[0];
-//         while (carg != NULL) {
-//             narg = carg + 1; 
-//             free(carg); 
-//             carg = narg; 
-//         }
+//         Free each element in command_args
+        carg = ccp->command_args[0];
+        while (carg != NULL) {
+            narg = carg + 1; 
+            free(carg); 
+            carg = narg; 
+        }
         
         // Free redirect_in_path
         free(ccp->redirect_in_path); 
