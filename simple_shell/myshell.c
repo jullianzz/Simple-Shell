@@ -31,7 +31,7 @@ void setup_redirection(const struct pipeline_command *pcmd) {
     */
     if (pcmd->redirect_in_path != NULL) {
 //         printf("%s doing this shit\n", pcmd->command_args[0]);
-        int fd_in = open(pcmd->redirect_in_path, O_RDONLY); // Don't use O_RDONLY here
+        int fd_in = open(pcmd->redirect_in_path, O_RDONLY, S_IRUSR | S_IRGRP | S_IROTH); // Don't use O_RDONLY here
 //         close(0); 
         dup2(fd_in, 0);  // Points stdin file descriptor to fd_in file
         close(fd_in);    // Release fd_in file descriptor
