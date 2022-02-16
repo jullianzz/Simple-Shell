@@ -122,7 +122,7 @@ struct pipeline *new_pipeline()
 
 struct pipeline *pipeline_build(const char *command_line)
 {
-// 	printf("Command Line: %s", command_line);
+	printf("Command Line: %s", command_line);
 
 	/*******************************************************************************************
 	********************************** Solve the Lexing Problem ********************************
@@ -171,12 +171,12 @@ struct pipeline *pipeline_build(const char *command_line)
 	* After while loop finishes, the tokens_ds data stucture holds 
 	* pointers to each token in the command line
 	*/ 
-// 	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
+	printf("\nPRINT TOKENS DATA STRUCTURE:\n");
 
-// 	for (int i = 0; i < rtc; i++) {
-// 		printf("%s\n", tokens_ds[i]);
-// 	}
-// 	printf("\n");
+	for (int i = 0; i < rtc; i++) {
+		printf("yas %s\n", tokens_ds[i]);
+	}
+	printf("\n");
 
 
 	/*******************************************************************************************
@@ -200,7 +200,7 @@ struct pipeline *pipeline_build(const char *command_line)
 	*/ 	
 	int tokens_ds_idx = 0; 
 	int cmd_args_idx = 0; 
-    int count = 0; 
+//     int count = 0; 
     
 	while (tokens_ds_idx != rtc) {
 		switch (*tokens_ds[tokens_ds_idx]) {
@@ -211,7 +211,7 @@ struct pipeline *pipeline_build(const char *command_line)
 				pcmds_iterator->next = new_pipeline_cmd(); 
 				pcmds_iterator = pcmds_iterator->next; 		// Point pcmds_iterator to new pipeline_command
 				cmd_args_idx = 0; 							// Reset command args index to 0
-                count = 0; 
+//                 count = 0; 
 				break;
 
 			/* Token '&' indicates the pipeline runs in the background */ 
@@ -222,23 +222,37 @@ struct pipeline *pipeline_build(const char *command_line)
 			/* Token '<' indicates a redirect in path */
 			case '<':
                 tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
-                if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>' || tokens_ds[tokens_ds_idx] == NULL) {
-                    perror("ERROR: Redirection error"); 
+                if (tokens_ds_idx != rtc) {
+                    if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
+                        perror("ERROR: Redirection error"); 
+                        exit(EXIT_FAILURE);
+                    }
+                    pcmds_iterator->redirect_in_path = tokens_ds[tokens_ds_idx]; 
+                } else {
+                    perror("ERROR: Redirection error");
+                    exit(EXIT_FAILURE);
                 }
-				pcmds_iterator->redirect_in_path = tokens_ds[tokens_ds_idx]; 
 				break;
 
 			/* Token '>' indicates a redirect out path */
 			case '>':
-                count ++; 
-                if (count > 1) {
-                    perror("this do be wrong though");
-                }
+//                 count ++; 
+//                 if (count > 1) {
+//                     perror("this do be wrong though");
+//                 }
                 tokens_ds_idx++; 							// Increment tokens_ds_idx to get the next word token
-                if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>' || tokens_ds[tokens_ds_idx] == NULL) {
+                if (tokens_ds_idx != rtc) {
+                    if (*tokens_ds[tokens_ds_idx] == '<' || *tokens_ds[tokens_ds_idx] == '>') {
+                        perror("ERROR: Redirection error"); 
+                        exit(EXIT_FAILURE);
+                    }
+                    pcmds_iterator->redirect_out_path = tokens_ds[tokens_ds_idx]; 
+                } else {
                     perror("ERROR: Redirection error"); 
+//                     exit(EXIT_FAILURE);
+                    printf("SHOULDN'T BE HEREE??\n");
                 }
-				pcmds_iterator->redirect_out_path = tokens_ds[tokens_ds_idx]; 
+//                 printf("HERE???\n");
 				break; 
 
 			/* Default indicates the token is a non-symbol word */
