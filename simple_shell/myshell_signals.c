@@ -16,22 +16,22 @@ void install_action(int signo, void *handler) {
 
  
 // Send the pipe RD file descriptor to the parent process using sigqueue on SIGUSR1
-void send_fd_to_parent(pid_t pid, int fd) {
-    union sigval *sigdata;
-    sigdata = (union sigval *) malloc(sizeof(union sigval)); 
-    sigdata->sival_int = fd;
-    sigqueue(pid, SIGUSR1, *sigdata);
-    free(sigdata); 
-}
+// void send_fd_to_parent(pid_t pid, int fd) {
+//     union sigval *sigdata;
+//     sigdata = (union sigval *) malloc(sizeof(union sigval)); 
+//     sigdata->sival_int = fd;
+//     sigqueue(pid, SIGUSR1, *sigdata);
+//     free(sigdata); 
+// }
 
 // Send the RD pipe select to parent process using sigqueue on SIGUSR2
-void send_rdselect_to_parent(pid_t pid, int fd) {
-    union sigval *sigdata;
-    sigdata = (union sigval *) malloc(sizeof(union sigval)); 
-    sigdata->sival_int = fd;
-    sigqueue(pid, SIGUSR2, *sigdata);
-    free(sigdata); 
-}
+// void send_rdselect_to_parent(pid_t pid, int fd) {
+//     union sigval *sigdata;
+//     sigdata = (union sigval *) malloc(sizeof(union sigval)); 
+//     sigdata->sival_int = fd;
+//     sigqueue(pid, SIGUSR2, *sigdata);
+//     free(sigdata); 
+// }
 
 
 // Handle sigqueue from child process that sends the pipe RD file descriptor

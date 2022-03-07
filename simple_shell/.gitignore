@@ -1,4 +1,5 @@
 *
 !*.*
+*.o
 outfile.txt
-.ipynb_checkpoints
+vgcore.2120
