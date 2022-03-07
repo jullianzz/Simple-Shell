@@ -20,3 +20,6 @@
 - ls -al | wc -l 
 - ls -al |wc -l>lines_in_ls
 - cat lines_in_ls
+
+### Extra
+- To see the unorganized brain dump pages I used to plan out this project see: https://docs.google.com/document/d/10BIujx2kN2WrBYDmJRrXr6DJL7EqGNcsPHoe-Mv-qSg/edit?usp=sharing
