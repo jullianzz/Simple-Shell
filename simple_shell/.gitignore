@@ -1,5 +1,5 @@
+*.o
 *
 !*.*
-*.o
 outfile.txt
 vgcore.2120
